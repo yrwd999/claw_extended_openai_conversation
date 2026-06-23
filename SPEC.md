@@ -41,7 +41,7 @@
 
 **自建 `claw_extended_openai_conversation` 集成 — 严格最小化改造**：
 - **基线**：复制 `extended_openai_conversation` 2.0.2 全部文件
-- **改 3 个文件**：`manifest.json`（4 字段）+ `const.py`（1 行）+ `conversation.py`（改 1 方法 + 删 7 方法 + 删 1 类）
+- **改 3 个文件**：`manifest.json`（4 字段）+ `const.py`（2 行）+ `conversation.py`（改 1 方法 + 删 8 方法 + 删 1 类）
 - **保留 100%**：`__init__.py`、`config_flow.py`、`helpers.py`（含 6 种 `FunctionExecutor` 不删）、`exceptions.py`、`services.py`、`services.yaml`、`strings.json`、`translations/`
 - **保留 `AsyncOpenAI(base_url=***)` 客户端**（直连 MiniMax API）
 - 部署到 `/config/custom_components/`，不走 HACS（避免升级覆盖）
@@ -108,8 +108,8 @@
 | 序号 | 文件 | 行数（基线）| 改动类型 | 改动量 | 引用 |
 |------|------|----------|---------|--------|------|
 | 1 | `manifest.json` | 24 | **必改** | 改 4 个字段 | [4.2 节](#42-manifestjson-改动明细) |
-| 2 | `const.py` | 107 | **必改** | 改 1 行（`DOMAIN`）| [4.3 节](#43-constpy-改动明细) |
-| 3 | `conversation.py` | 578 | **必改** | 改 1 方法 + 删 7 方法 + 删 1 类（共 249 行）| [4.4 节](#44-conversationpy-改动明细) |
+| 2 | `const.py` | 107 | **必改** | 改 1 行（`DOMAIN`）+ 新增 1 行（`MAX_TOOL_ITERATIONS`）| [4.3 节](#43-constpy-改动明细) |
+| 3 | `conversation.py` | 578 | **必改** | 改 1 方法 + 删 8 方法 + 删 1 类（实际删除 249+ 行）| [4.4 节](#44-conversationpy-改动明细) |
 | 4 | `__init__.py` | 115 | **100% 复制** | 0 | [4.5 节](#45-initpy-100-复制) |
 | 5 | `config_flow.py` | 336 | **100% 复制** | 0 | [4.6 节](#46-config_flowpy-100-复制) |
 | 6 | `helpers.py` | 767 | **100% 复制** | 0 | [4.7 节](#47-helperspy-100-复制) |
@@ -121,7 +121,7 @@
 **净改动统计**：
 - 必改文件：3 个（占总数 30%）
 - 100% 复用文件：7 个（占总数 70%）
-- 必删代码：7 个方法 + 1 个类 = 249 行（基线 conversation.py 第 330-578 行）
+- 必删代码：8 个方法 + 1 个类 = 249+ 行（基线 conversation.py 第 330-578 行）
 - 必改方法：1 个方法 = 97 行（`_async_handle_message` 重写）
 - 必新增代码：~30 行（`async_provide_llm_data` 调用 + LLM 循环 + tool_calls 处理）
 - **总代码净增** = +30 - 249 = **-219 行**（比基线还少）
@@ -152,11 +152,12 @@
 
 **引用**：基线位于 `/config/custom_components/extended_openai_conversation/const.py`（107 行）
 
-**必改 1 行**：
+**必改 1 行 + 新增 1 行**：
 
 | 字段 | 当前值（基线）| 改后值 |
 |------|--------|--------|
 | `DOMAIN` 常量 | `DOMAIN = "extended_openai_conversation"` | `DOMAIN = "claw_extended_openai_conversation"` |
+| `MAX_TOOL_ITERATIONS` | （不存在）| `MAX_TOOL_ITERATIONS = 10`（新增，用于限制 tool_calls 循环次数）|
 
 **如何定位该行**：在基线文件中搜索 `DOMAIN = "extended_openai_conversation"`，唯一匹配。
 
@@ -206,8 +207,9 @@
 | 必保留调用 | `get_exposed_entities()`（基线第 144 行 — 改写后仍可调）|
 | 必保留生成 | `_generate_system_message()`（基线第 152 行 — 改写后仍可调，用于构造 system prompt 传给 `chat_log.async_provide_llm_data`）|
 | 必新增 | `await chat_log.async_provide_llm_data(...)`（**FR-2.1**）|
-| 必新增 | LLM 调用循环（最多 N 轮，参考 HA core `MAX_TOOL_ITERATIONS = 10`）|
+| 必新增 | LLM 调用循环（最多 10 轮，`MAX_TOOL_ITERATIONS = 10` 在 `const.py` 新增）|
 | 必新增 | `chat_log.llm_api.async_call_tool()` 调用（**FR-2.4**）|
+| 必新增 | `_format_tool(tool)` 函数（将 `llm.Tool` 转为 OpenAI function schema）|
 
 **必须 100% 保留的方法**（不动的部分）：
 
@@ -365,10 +367,10 @@
 | 项目 | 要求 |
 |------|------|
 | FR-2.1 | 改写后的 `_async_handle_message`（conversation.py 138-235 行）必须**首行**调 `await chat_log.async_provide_llm_data(...)` 启用 HA AssistAPI |
-| FR-2.2 | 必须使用 HA core LLM 框架处理 `llm.Tool` → OpenAI function schema 的转换（参考 HA core `_format_tool`，无需自己实现）|
+| FR-2.2 | 必须使用 HA core LLM 框架处理 `llm.Tool` → OpenAI function schema 的转换（**新代码中已实现 `_format_tool` 函数**）|
 | FR-2.3 | 必须使用 `self.client`（基线 conversation.py 第 123 行赋值的 `entry.runtime_data` AsyncOpenAI 实例）调 LLM API，**保留** `base_url` 参数 |
 | FR-2.4 | 必须支持 LLM 返回的 `tool_calls` 通过 `chat_log.llm_api.async_call_tool()` 执行（**新代码内部新增**，不调基线的 `execute_tool_calls`）|
-| FR-2.5 | 必须支持多轮 tool_calls 循环（最多迭代次数参考 HA core `MAX_TOOL_ITERATIONS = 10`，在 HA core `openai_conversation/entity.py` 第 79 行）|
+| FR-2.5 | 必须支持多轮 tool_calls 循环（迭代次数通过 `const.py` 新增的 `MAX_TOOL_ITERATIONS = 10` 控制）|
 | FR-2.6 | 必须支持流式响应（`_attr_supports_streaming = True`，基线 conversation.py 已有）|
 
 ### FR-3：客户端与端点配置（**复用基线**）
@@ -665,7 +667,7 @@
 | 必新增 | 描述 |
 |--------|------|
 | `await chat_log.async_provide_llm_data(llm_context, True, prompt, extra_system_prompt)` | 启动 ChatLog 框架 |
-| LLM 调用循环 | `for iteration in range(MAX_TOOL_ITERATIONS):`（MAX_TOOL_ITERATIONS = 10，参考 HA core `openai_conversation/entity.py` 第 79 行）|
+| LLM 调用循环 | `for iteration in range(MAX_TOOL_ITERATIONS):`（`const.py` 新增 `MAX_TOOL_ITERATIONS = 10`）|
 | `messages = _convert_content_to_param(chat_log.content)` | 把 ChatLog 内容转 OpenAI messages（**参考 HA core `_convert_content_to_param` 实现，复制/简化**）|
 | `tools = [_format_tool(tool, chat_log.llm_api.custom_serializer) for tool in chat_log.llm_api.tools]` | 把 llm.Tool 转 OpenAI function schema（**参考 HA core `_format_tool` 实现，复制/简化**）|
 | `response = await self.client.chat.completions.create(model, messages, tools=tools, tool_choice="auto")` | 调 LLM（**复用基线 `self.client`**）|
@@ -776,7 +778,7 @@
 | `const.py` | `/config/custom_components/extended_openai_conversation/const.py` | 107 | 改 1 行 |
 | `__init__.py` | `/config/custom_components/extended_openai_conversation/__init__.py` | 115 | 100% 复制 |
 | `config_flow.py` | `/config/custom_components/extended_openai_conversation/config_flow.py` | 336 | 100% 复制 |
-| `conversation.py` | `/config/custom_components/extended_openai_conversation/conversation.py` | 578 | 改 1 方法 + 删 7 方法 + 删 1 类 |
+| `conversation.py` | `/config/custom_components/extended_openai_conversation/conversation.py` | 578 | 改 1 方法 + 删 8 方法 + 删 1 类 |
 | `helpers.py` | `/config/custom_components/extended_openai_conversation/helpers.py` | 767 | 100% 复制 |
 | `exceptions.py` | `/config/custom_components/extended_openai_conversation/exceptions.py` | 135 | 100% 复制 |
 | `services.py` | `/config/custom_components/extended_openai_conversation/services.py` | 212 | 100% 复制 |
@@ -934,7 +936,7 @@ should_continue = response_text.rstrip().endswith("?") or any(
 | D-2 | `const.py` | 改 | 复制 + 改 `DOMAIN` 常量 | 必改 |
 | D-3 | `__init__.py` | 复制 | 沿用 extended_openai_conversation | 100% 复制 |
 | D-4 | `config_flow.py` | 复制 | 沿用 extended_openai_conversation | 100% 复制 |
-| D-5 | `conversation.py` | **核心改造** | 复制 + 改 1 方法（`_async_handle_message`）+ 删 7 方法 + 1 类（共 249 行）| 必改 |
+| D-5 | `conversation.py` | **核心改造** | 复制 + 改 1 方法（`_async_handle_message`）+ 删 8 方法 + 1 类 | 必改 |
 | D-6 | `helpers.py` | 复制 | 沿用 extended_openai_conversation | **100% 复制（含 6 种 FunctionExecutor 不删）** |
 | D-7 | `exceptions.py` | 复制 | 沿用 extended_openai_conversation | 100% 复制 |
 | D-8 | `services.py` | 复制 | 沿用 extended_openai_conversation | 100% 复制 |
@@ -1045,8 +1047,8 @@ should_continue = response_text.rstrip().endswith("?") or any(
 | **version** | `2.0.2` | `2.0.2-claw-fork.1` |
 | **codeowners** | `@jekalmin` | `@yrwd999` |
 | **代码文件数** | 10 个 Python + 配置 | **完全相同 10 个 Python + 配置** |
-| **conversation.py 总行数** | 578 | **~352（-226 行）** |
-| **改动方法数** | — | **改 1 个（`_async_handle_message`）+ 删 7 个方法 + 1 个类**（共 249 行）|
+| **conversation.py 总行数** | 578 | **268（-310 行）** |
+| **改动方法数** | — | **改 1 个（`_async_handle_message`）+ 删 8 个方法 + 1 个类**（实际删除 249+ 行）+ 新增 `_format_tool` 函数 |
 | **`helpers.py` 改动** | — | **0 改动（6 种 FunctionExecutor 全保留）** |
 | **`__init__.py` 改动** | — | **0 改动** |
 | **`config_flow.py` 改动** | — | **0 改动** |
