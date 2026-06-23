@@ -17,7 +17,7 @@ from homeassistant.components.conversation import (
     ConversationResult,
     async_get_chat_log,
 )
-from homeassistant.helpers.llm import llm
+from homeassistant.helpers.llm import APIInstance, Tool
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_NAME, MATCH_ALL
@@ -72,7 +72,7 @@ from .helpers import get_function_executor
 _LOGGER = logging.getLogger(__name__)
 
 
-def _format_tool(tool: llm.Tool) -> dict:
+def _format_tool(tool: Tool) -> dict:
     """Format an LLM tool for OpenAI API."""
     return {
         "type": "function",
@@ -157,7 +157,7 @@ class ExtendedOpenAIAgentEntity(
 
         # FR-2.1: Call async_provide_llm_data FIRST to set up LLM context
         await chat_log.async_provide_llm_data(
-            llm.APIInstance(
+            APIInstance(
                 platform=DOMAIN,
                 context=user_input.context,
                 user=user_input.context.user_id,
