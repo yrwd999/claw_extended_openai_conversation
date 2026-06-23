@@ -19,5 +19,5 @@
   "requirements": [
     "openai~=2.21.0"
   ],
-  "version": "2.0.2-claw-fork.1"
+  "version": "2.0.3"
 }
