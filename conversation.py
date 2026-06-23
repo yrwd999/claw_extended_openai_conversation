@@ -6,11 +6,7 @@ import json
 import logging
 from typing import Any, Literal
 
-from openai._exceptions import OpenAIError
-from openai.types.chat.chat_completion import ChatCompletion, Choice
-from openai.types.chat.chat_completion_message import ChatCompletionMessage
 import voluptuous as vol
-import yaml
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
