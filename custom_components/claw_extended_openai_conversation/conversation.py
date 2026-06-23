@@ -16,8 +16,8 @@ from homeassistant.components.conversation import (
     ConversationInput,
     ConversationResult,
     async_get_chat_log,
-    llm,
 )
+from homeassistant.helpers.llm import llm
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_NAME, MATCH_ALL
