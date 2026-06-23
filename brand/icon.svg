@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a73e8"/>
+      <stop offset="100%" style="stop-color:#0d47a1"/>
+    </linearGradient>
+    <linearGradient id="clawGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e3f2fd"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)"/>
+  
+  <!-- Speech bubble (left) -->
+  <path d="M100 200 Q100 140 160 140 L220 140 Q280 140 280 200 L280 220 Q280 240 260 240 L160 240 Q140 240 140 220 L140 200 Q100 200 100 200 Z" 
+        fill="url(#clawGrad)" opacity="0.95"/>
+  
+  <!-- Speech bubble (right) -->
+  <path d="M160 300 Q160 260 220 260 L280 260 Q340 260 340 300 L340 320 Q340 340 320 340 L220 340 Q200 340 200 320 L200 300 Q160 300 160 300 Z" 
+        fill="url(#clawGrad)" opacity="0.95"/>
+  
+  <!-- Claw print (main pad) -->
+  <ellipse cx="256" cy="340" rx="70" ry="55" fill="url(#clawGrad)"/>
+  
+  <!-- Claw toes (4) -->
+  <ellipse cx="150" cy="260" rx="30" ry="40" fill="url(#clawGrad)" transform="rotate(-30 150 260)"/>
+  <ellipse cx="210" cy="190" rx="30" ry="40" fill="url(#clawGrad)" transform="rotate(-10 210 190)"/>
+  <ellipse cx="302" cy="190" rx="30" ry="40" fill="url(#clawGrad)" transform="rotate(10 302 190)"/>
+  <ellipse cx="362" cy="260" rx="30" ry="40" fill="url(#clawGrad)" transform="rotate(30 362 260)"/>
+  
+  <!-- Neural network dots (AI element) -->
+  <circle cx="175" cy="175" r="8" fill="#1a73e8"/>
+  <circle cx="255" cy="155" r="8" fill="#1a73e8"/>
+  <circle cx="335" cy="175" r="8" fill="#1a73e8"/>
+  <circle cx="215" cy="310" r="6" fill="#1a73e8"/>
+  <circle cx="297" cy="310" r="6" fill="#1a73e8"/>
+  
+  <!-- Connection lines (subtle) -->
+  <line x1="175" y1="175" x2="255" y2="155" stroke="#1a73e8" stroke-width="3" opacity="0.5"/>
+  <line x1="255" y1="155" x2="335" y2="175" stroke="#1a73e8" stroke-width="3" opacity="0.5"/>
+  <line x1="215" y1="310" x2="255" y2="285" stroke="#1a73e8" stroke-width="3" opacity="0.5"/>
+  <line x1="297" y1="310" x2="255" y2="285" stroke="#1a73e8" stroke-width="3" opacity="0.5"/>
+</svg>

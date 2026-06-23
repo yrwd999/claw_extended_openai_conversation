@@ -1,0 +1,13 @@
+{
+  "name": "Claw Extended OpenAI Conversation",
+  "content_root": "custom_components",
+  "filename": null,
+  "description": "Extended OpenAI Conversation integration with MiniMax LLM support via HA ChatLog framework",
+  "codeowners": ["@yrwd999"],
+  "url": "https://github.com/yrwd999/claw_extended_openai_conversation",
+  "manifest": {
+    "name": "Claw Extended OpenAI Conversation",
+    "path": "custom_components/claw_extended_openai_conversation"
+  },
+  "category": "integration"
+}

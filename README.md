@@ -22,15 +22,29 @@ HA custom integration: fork of extended_openai_conversation 2.0.2 with ChatLog f
 
 完整需求规格见 [SPEC.md](./SPEC.md)
 
-## 部署（由 Ray 执行）
+## 安装方式
 
-1. 备份原 `extended_openai_conversation` 目录
-2. 部署本集成到 `/config/custom_components/claw_extended_openai_conversation/`
+### 方式一：HACS（推荐）
+
+1. 在 HACS 中添加自定义仓库：
+   - HACS → Integrations → ⋮ → Custom repositories
+   - URL: `https://github.com/yrwd999/claw_extended_openai_conversation`
+   - Category: Integration
+2. 重启 Home Assistant
+3. 在 HA UI 添加新集成：`设置` → `设备与服务` → `添加集成` → 搜索 `Claw Extended OpenAI Conversation`
+
+### 方式二：手动安装
+
+1. 备份原 `extended_openai_conversation` 目录（如有）
+2. 克隆本仓库到 `/config/custom_components/claw_extended_openai_conversation/`
 3. 重启 HA
 4. 在 HA UI 添加新集成
-5. 修改 `claw_assistant.options.primary_agent` 指向新集成
+
+## 部署后配置
+
+1. 修改 `claw_assistant.options.primary_agent` 指向新集成
 
 ## 来源
 
 - Forked from: [jekalmin/extended_openai_conversation](https://github.com/jekalmin/extended_openai_conversation) v2.0.2
-- 集成类型: private (非 HACS)
+- 集成类型: HACS private repository
