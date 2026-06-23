@@ -18,9 +18,10 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -261,12 +262,22 @@ class ExtendedOpenAISubentryFlowHandler(ConfigSubentryFlow):
 
     def openai_config_option_schema(self, options: dict[str, Any]) -> dict:
         """Return a schema for OpenAI completion options."""
+        hass_apis: list[SelectOptionDict] = [
+            SelectOptionDict(
+                label=api.name,
+                value=api.id,
+            )
+            for api in llm.async_get_apis(self.hass)
+        ]
         return {
             vol.Optional(
                 CONF_PROMPT,
                 description={"suggested_value": options.get(CONF_PROMPT)},
                 default=DEFAULT_PROMPT,
             ): TemplateSelector(),
+            vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                SelectSelectorConfig(options=hass_apis, multiple=True)
+            ),
             vol.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},

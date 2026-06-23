@@ -17,10 +17,10 @@ from homeassistant.components.conversation import (
     ConversationResult,
     async_get_chat_log,
 )
-from homeassistant.helpers.llm import APIInstance, Tool
+from homeassistant.helpers.llm import Tool
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import ATTR_NAME, MATCH_ALL
+from homeassistant.const import ATTR_NAME, CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import (
@@ -152,23 +152,22 @@ class ExtendedOpenAIAgentEntity(
         chat_log: ChatLog,
     ) -> ConversationResult:
         """Handle a conversation message using HA ChatLog framework (FR-2)."""
+        options = self.options
+
+        try:
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
+                options.get(CONF_LLM_HASS_API),
+                options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
+            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
+
         intent_response = intent.IntentResponse(language=user_input.language)
         conversation_id = chat_log.conversation_id
 
-        # FR-2.1: Call async_provide_llm_data FIRST to set up LLM context
-        await chat_log.async_provide_llm_data(
-            APIInstance(
-                platform=DOMAIN,
-                context=user_input.context,
-                user=user_input.context.user_id,
-                language=user_input.language,
-                assistant=conversation.DOMAIN,
-                device_id=user_input.device_id,
-            ),
-            chat_log,
-        )
-
-        model = self.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
+        model = options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
         max_tokens = self.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
         top_p = self.options.get(CONF_TOP_P, DEFAULT_TOP_P)
         temperature = self.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
